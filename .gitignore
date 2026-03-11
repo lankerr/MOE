@@ -1,0 +1,97 @@
+# ===================== Python =====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+*.so
+
+# ===================== 模型权重/Checkpoint =====================
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.safetensors
+checkpoints/
+checkpoints_*/
+**/checkpoints/
+
+# ===================== 训练输出 =====================
+# Earthformer experiments 训练输出 (保留代码，排除产出)
+earth-forecasting-transformer/scripts/cuboid_transformer/sevir/experiments/
+# DATSwinLSTM experiments 训练输出
+datswinlstm_memory/checkpoints/
+datswinlstm_memory/checkpoints_*/
+# 调试临时输出
+**/debug/_debug_tmp/
+**/debug/debug_log_*.txt
+**/debug/nan_report_*.json
+
+# ===================== 数据集 =====================
+datasets/
+earth-forecasting-transformer/datasets/
+*.h5
+*.hdf5
+*.nc
+*.zarr
+
+# ===================== 日志 =====================
+*.log
+train_log.txt
+train_full_log*.txt
+status_report.txt
+error_log*.txt
+resume_log.txt
+losses_dump.txt
+train_losses.txt
+debug.log
+error.log
+error2.log
+train_crash.log
+
+# ===================== 不相关文件 =====================
+二十四史txt/
+*.doc
+*.docx
+*.lnk
+*.pdf
+
+# ===================== 图片 (可选保留) =====================
+# *.png  # loss_curves.png 等保留
+
+# ===================== 系统 =====================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# ===================== IDE =====================
+.vscode/
+.idea/
+*.code-workspace
+
+# ===================== Shell 脚本 (Linux only) =====================
+datswinlstm_memory/*.sh
+
+# ===================== Git (子仓库) =====================
+# 子项目的 .git 目录在推送前手动删除
+
+# ===================== 大文件/杂项 =====================
+large_files.txt
+check_all_train_start_report.json
+nanoGPT/out-*/
+nanoGPT/data/
+nanoMoE/data/
+msrnn/results/
+msrnn/test_results*/
+msrnn/convlstm_test_results/
+msrnn/train_mim_chongqing/
+msrnn/visualizations_sevir_style/
+datswinlstm_memory/sft/
+datswinlstm_memory/sevir_49frame_flash/
+datswinlstm_memory/pipeline_49frame/
+datswinlstm_memory/evaluation_scripts/

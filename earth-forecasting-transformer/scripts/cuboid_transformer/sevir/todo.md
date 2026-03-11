@@ -1,0 +1,1 @@
+wsl -d Ubuntu-24.04 -u extrapolation bash -c "source ~/earthformer_env/bin/activate && cd /mnt/c/Users/97290/Desktop/datswinlstm_memory/earth-forecasting-transformer && python3 -u scripts/cuboid_transformer/sevir/train_cuboid_sevir.py --gpus 1 --cfg scripts/cuboid_transformer/sevir/cfg_sevir.yaml"

@@ -1,0 +1,11 @@
+pytorch_lightning>=1.6.0
+torchmetrics
+omegaconf
+einops
+numpy
+pandas
+matplotlib
+PyYAML
+boto3
+scikit-learn
+scikit-image
