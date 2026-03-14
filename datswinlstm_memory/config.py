@@ -12,10 +12,10 @@ class cfg:
     # ============= 数据集路径配置 =============
     # 数据集路径配置 - 自动识别 Windows / WSL
     if os.name == 'nt':
-        datasets_dir = r"c:\Users\97290\Desktop\datasets"   # Windows 路径
+        datasets_dir = r"X:\datasets"   # Windows 路径 (外部硬盘)
     else:
         # WSL 路径映射
-        datasets_dir = "/mnt/c/Users/97290/Desktop/datasets"  # WSL 路径
+        datasets_dir = "/mnt/x/datasets"  # WSL 路径
     
     # 智算平台路径 (使用时取消注释)
     # datasets_dir = "/data/datasets"

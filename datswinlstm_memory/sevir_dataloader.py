@@ -304,8 +304,8 @@ class SEVIRDataLoader:
 
 def test_dataloader():
     """测试数据加载器"""
-    catalog_path = r"c:\Users\97290\Desktop\datasets\sevir\CATALOG.csv"
-    data_dir = r"c:\Users\97290\Desktop\datasets\sevir\data"
+    catalog_path = r"X:\datasets\sevir\CATALOG.csv"
+    data_dir = r"X:\datasets\sevir\data"
     
     loader = SEVIRDataLoader(
         catalog_path=catalog_path,

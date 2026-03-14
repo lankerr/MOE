@@ -765,7 +765,7 @@ def get_parser():
 
 
 import sys
-sys.path.append(r"c:\Users\97290\Desktop\MOE\datswinlstm_memory")
+sys.path.append(r"c:\Users\Lenovo\Desktop\MOE\datswinlstm_memory")
 from sevir_torch_wrap import SEVIRTorchDataset
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader
@@ -776,8 +776,8 @@ class AlignedSEVIRDataModule(LightningDataModule):
         import datetime
         self.micro_batch_size = micro_batch_size
         self.num_workers = num_workers
-        sevir_catalog = r"c:\Users\97290\Desktop\datasets\sevir\CATALOG.csv"
-        sevir_data_dir = r"c:\Users\97290\Desktop\datasets\sevir\data"
+        sevir_catalog = r"X:\datasets\sevir\CATALOG.csv"
+        sevir_data_dir = r"X:\datasets\sevir\data"
         self.train_dataset = SEVIRTorchDataset(
             sevir_catalog=sevir_catalog,
             sevir_data_dir=sevir_data_dir,

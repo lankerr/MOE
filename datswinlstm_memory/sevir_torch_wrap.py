@@ -248,8 +248,8 @@ class SEVIRTorchDataset(Dataset):
 
 def test_dataset():
     """测试数据集"""
-    catalog_path = r"c:\Users\97290\Desktop\datasets\sevir\CATALOG.csv"
-    data_dir = r"c:\Users\97290\Desktop\datasets\sevir\data"
+    catalog_path = r"X:\datasets\sevir\CATALOG.csv"
+    data_dir = r"X:\datasets\sevir\data"
     
     dataset = SEVIRTorchDataset(
         sevir_catalog=catalog_path,
