@@ -62,7 +62,8 @@ from earthformer.cuboid_transformer.cuboid_transformer import CuboidTransformerM
 from earthformer.datasets.sevir.sevir_torch_wrap import SEVIRLightningDataModule
 
 # === GMR-Conv 替换 ===
-from gmr_layers import patch_model_with_gmr, count_gmr_layers
+# 修复: 只替换 initial_encoder + final_decoder，不动 FFN 的 1x1 Conv
+from gmr_patch_embed import patch_model_with_gmr_embed, count_gmr_embed_layers
 
 _curr_dir = os.path.realpath(os.path.dirname(os.path.realpath(__file__)))
 exps_dir = os.path.join(_curr_dir, "experiments")
@@ -151,10 +152,14 @@ class CuboidSEVIRGMRModule(pl.LightningModule):
             norm_init_mode=model_cfg["norm_init_mode"],
         )
 
-        # 2. 用 GMR-Conv 替换所有 Conv2d → GMR_Conv2d (连续旋转等变)
-        patch_model_with_gmr(self.torch_nn_module)
-        stats = count_gmr_layers(self.torch_nn_module)
-        print(f"[GMR-Conv] 层统计: {stats}")
+        # 2. 用 GMR-Conv 替换 initial_encoder + final_decoder (BUG FIX: 不替换 FFN 的 1x1 Conv)
+        patch_model_with_gmr_embed(
+            self.torch_nn_module,
+            in_chans=model_cfg["input_shape"][-1],
+            embed_dim=model_cfg["base_units"],
+        )
+        stats = count_gmr_embed_layers(self.torch_nn_module)
+        print(f"[GMR-Conv] 已替换 initial_encoder + final_decoder: {stats}")
 
         self.total_num_steps = total_num_steps
         if oc_file is not None:
@@ -507,7 +512,8 @@ class AlignedSEVIRDataModule(LightningDataModule):
                           num_workers=self.num_workers)
 
     def test_dataloader(self):
-        return DataLoader(self.val_dataset, batch_size=self.micro_batch_size,
+        # BUG FIX: 返回 test_dataset 而不是 val_dataset
+        return DataLoader(self.test_dataset, batch_size=self.micro_batch_size,
                           shuffle=False, drop_last=False, collate_fn=self.collate_fn,
                           num_workers=self.num_workers)
 
