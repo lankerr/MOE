@@ -124,14 +124,18 @@ class PhysicsGuidedSparseAttention(nn.Module):
 
             # Dilation: pad with zeros, apply max pooling
             valid_float = valid_mask.float()
-            padded = F.pad(valid_float.view(B*T, 1, H, W),
+            valid_2d = valid_float.view(B*T, 1, H, W)
+            padded = F.pad(valid_2d,
                           pad=(self.boundary_dilation, self.boundary_dilation,
                                self.boundary_dilation, self.boundary_dilation),
                           mode='constant', value=0)
             dilated = F.max_pool2d(padded, kernel_size=kernel_size, stride=1)
 
             # Boundary = dilated but not originally valid
-            boundary_mask = (dilated > 0.5) != valid_mask
+            # Squeeze to remove channel dim for comparison
+            dilated_squeezed = dilated.squeeze(1)  # (B*T, H, W)
+            valid_2d_squeezed = valid_2d.squeeze(1)  # (B*T, H, W)
+            boundary_mask = (dilated_squeezed > 0.5) != valid_2d_squeezed
             boundary_mask = boundary_mask.view(B, T, H, W)
         else:
             boundary_mask = torch.zeros_like(valid_mask)
