@@ -95,3 +95,14 @@ datswinlstm_memory/sft/
 datswinlstm_memory/sevir_49frame_flash/
 datswinlstm_memory/pipeline_49frame/
 datswinlstm_memory/evaluation_scripts/
+
+# ===================== VideoMAE 实验输出 =====================
+VideoMAE/__pycache__/
+VideoMAE/data/
+VideoMAE/mae_hf_fashion/
+VideoMAE/mae_dynamic_fashion/
+VideoMAE/mae_fashion_output/
+VideoMAE/mae_pro_cifar10/
+VideoMAE/demo_output/
+VideoMAE/checkpoints_videomae/
+*.npz
