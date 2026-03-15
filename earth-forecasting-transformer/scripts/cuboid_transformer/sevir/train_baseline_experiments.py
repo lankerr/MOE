@@ -84,11 +84,38 @@ def create_trainer(config, exp_name, output_dir):
         save_last=True,
     )
 
-    early_stop_callback = EarlyStopping(
+    # AutoStop callback (自适应早停)
+    from earthformer.utils.adaptive_lr import AutoStopCallback
+    early_stop_patience = config.get('optim', {}).get('early_stop_patience', 15)
+    auto_stop = AutoStopCallback(
+        patience=early_stop_patience,
+        min_delta=1e-4,
         monitor='val_loss',
-        patience=config.get('optim', {}).get('early_stop_patience', 20),
         mode='min',
+        min_lr=1e-6,
+        verbose=True,
     )
+
+    # Wrap as Lightning callback
+    class AutoStopLightningCallback(pl.Callback):
+        def __init__(self, auto_stop_inner):
+            self.auto_stop = auto_stop_inner
+
+        def on_validation_end(self, trainer, pl_module):
+            val_loss = trainer.callback_metrics.get('val_loss')
+            current_lr = trainer.optimizers[0].param_groups[0]['lr']
+
+            # 获取梯度norm (需要从模型中获取)
+            grad_norm = None
+            if hasattr(pl_module, 'grad_norm'):
+                grad_norm = pl_module.grad_norm
+
+            if val_loss is not None:
+                should_stop = self.auto_stop(float(val_loss), float(current_lr), grad_norm)
+                if should_stop:
+                    trainer.should_stop = True
+
+    early_stop_callback = AutoStopLightningCallback(auto_stop)
 
     # Logger
     logger = TensorBoardLogger(

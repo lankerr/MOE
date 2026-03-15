@@ -43,20 +43,25 @@ optim:
   micro_batch_size: 1
   seed: 0
   method: "adamw"
-  lr: 0.0002
+  lr: auto  # 自动使用 LRFinder 寻找最优LR
   wd: 0.01
   gradient_clip_val: 0.5
   max_epochs: 50
-  # WSD Scheduler
-  lr_scheduler_mode: "wsd"
-  wsd_warmup_epochs: 10
-  wsd_stable_epochs: 25
-  wsd_decay_epochs: 15
-  wsd_min_lr_ratio: 0.01
-  # early stopping
+  # Adaptive LR Scheduler
+  lr_scheduler_mode: "adaptive"
+  lr_finder_enabled: true
+  lr_finder_start_lr: 1e-7
+  lr_finder_end_lr: 0.5
+  lr_reduce_factor: 0.5
+  lr_reduce_patience: 5
+  lr_reduce_threshold: 1e-4
+  min_lr: 1e-6
+  # AutoStop
   early_stop: true
   early_stop_mode: "min"
   early_stop_patience: 15
+  early_stop_min_delta: 1e-4
+  grad_norm_threshold: 1e-5
   save_top_k: 1
 
 logging:
