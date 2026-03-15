@@ -41,25 +41,32 @@ from utils.dataset_wrapper import SEVIRDataModule
 
 # 实验配置映射
 EXPERIMENT_CONFIGS = {
+    # SEVIR 数据集实验
     '2h_to_2h': {
         'config': 'cfg_sevir_baseline_2h_to_2h.yaml',
         'priority': 'high',
-        'description': '2h→2h (1:1) - 与70%论文一致',
+        'description': 'SEVIR 2h→2h (1:1) - 与70%论文一致',
     },
     '4h_to_4h': {
         'config': 'cfg_sevir_baseline_4h_to_4h.yaml',
         'priority': 'high',
-        'description': '4h→4h (1:1) - 测试可预测性上限',
+        'description': 'SEVIR 4h→4h (1:1) - 测试可预测性上限',
     },
     '2h_to_3h': {
         'config': 'cfg_sevir_baseline_2h_to_3h.yaml',
         'priority': 'medium',
-        'description': '2h→3h (1:1.5) - 探索性实验',
+        'description': 'SEVIR 2h→3h (1:1.5) - 探索性实验',
     },
     '4h_to_3h': {
         'config': 'cfg_sevir_baseline_4h_to_3h.yaml',
         'priority': 'low',
-        'description': '4h→3h (4:3) - 探索性实验',
+        'description': 'SEVIR 4h→3h (4:3) - 探索性实验',
+    },
+    # 重庆数据集实验
+    'chongqing_2h_to_2h': {
+        'config': 'cfg_chongqing_baseline_2h_to_2h.yaml',
+        'priority': 'high',
+        'description': '重庆雷达 2h→2h - 山地地形预报',
     },
 }
 
@@ -169,17 +176,35 @@ def run_experiment(exp_name, config_path, test_run=False):
     with open(output_dir / 'config.yaml', 'w') as f:
         yaml.dump(config, f)
 
-    # Data Module
+    # Data Module - 支持 SEVIR 和重庆数据
     print("Initializing Data Module...")
     data_config = config.get('dataset', {})
     optim_config = config.get('optim', {})
 
-    datamodule = SEVIRDataModule(
-        data_dir=data_config.get('data_dir', './data/sevir'),
-        batch_size=optim_config.get('micro_batch_size', 1),
-        num_workers=4,
-        **data_config,
-    )
+    dataset_name = data_config.get('dataset_name', 'sevir')
+
+    if dataset_name == 'chongqing':
+        print("[Chongqing] Using Chongqing radar data...")
+        from chongqing_datamodule import ChongqingDataModule
+        datamodule = ChongqingDataModule(
+            data_dir=data_config.get('data_dir', './data/chongqing'),
+            batch_size=optim_config.get('micro_batch_size', 1),
+            num_workers=4,
+            in_len=data_config.get('in_len', 24),
+            out_len=data_config.get('out_len', 24),
+            img_size=(data_config.get('img_height', 384),
+                     data_config.get('img_width', 384)),
+            stride=data_config.get('stride', 24),
+        )
+    else:
+        print("[SEVIR] Using SEVIR data...")
+        from earthformer.datasets.sevir.sevir_torch_wrap import SEVIRLightningDataModule
+        datamodule = SEVIRLightningDataModule(
+            data_dir=data_config.get('data_dir', './data/sevir'),
+            batch_size=optim_config.get('micro_batch_size', 1),
+            num_workers=4,
+            **data_config,
+        )
 
     # Model
     print("Initializing Model...")
