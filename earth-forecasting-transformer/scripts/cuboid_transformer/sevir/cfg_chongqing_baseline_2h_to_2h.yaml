@@ -4,19 +4,26 @@ Baseline Experiment: 重庆雷达数据 2h → 2h
 
 重庆数据特点:
 - 帧间隔: 6分钟 (vs SEVIR 5分钟)
-- 格式: day_simple_YYYYMMDD.npy → (240, 384, 384)
-- 时间对应: 20帧 ≈ 2小时 (vs SEVIR 24帧)
+- 原始尺寸: 约 500x500 (雷达PPI扫描)
+- 预处理: resize 到目标尺寸
+- 格式: day_simple_YYYYMMDD.npy → (240, H, W)
 
 与SEVIR差异:
 1. 时间分辨率: 6分钟/帧 vs 5分钟/帧
 2. 覆盖范围: 重庆地区 vs 美国东南部
 3. 地形影响: 山地 vs 平原
+
+尺寸配置说明:
+- 原始重庆雷达: ~500x500 或 600x600
+- 预处理后默认: 384x384 (与SEVIR一致)
+- 可选尺寸: 256x256 (更快), 512x512 (更精细)
 """
 
 dataset:
   dataset_name: "chongqing"
-  img_height: 384
-  img_width: 384
+  # 图像尺寸配置 - 根据实际预处理结果修改
+  img_height: 384   # 可选: 256, 384, 512
+  img_width: 384    # 可选: 256, 384, 512
   # 重庆数据: 20帧 ≈ 2小时 (6分钟间隔)
   # 为保持一致性, 仍使用24帧 (实际2.4小时)
   in_len: 24
@@ -88,8 +95,9 @@ vis:
   plot_stride: 2
 
 model:
-  input_shape: [24, 384, 384, 1]
-  target_shape: [24, 384, 384, 1]
+  # 使用配置中的尺寸
+  input_shape: [24, 384, 384, 1]    # [in_len, img_height, img_width, channels]
+  target_shape: [24, 384, 384, 1]   # [out_len, img_height, img_width, channels]
   base_units: 64
   scale_alpha: 1.0
 

@@ -10,9 +10,31 @@
 
 ### 2. 重庆雷达数据
 - 帧间隔: 6分钟
-- 格式: `day_simple_YYYYMMDD.npy` (240, 384, 384)
+- 格式: `day_simple_YYYYMMDD.npy` (240, H, W)
 - 覆盖: 重庆地区 (山地地形)
+- 原始尺寸: 约 500x500 (根据雷达PPI扫描)
+- 预处理: resize 到目标尺寸
 - 配置: `cfg_chongqing_baseline_*.yaml`
+
+### 图像尺寸说明
+
+**检查实际数据尺寸**:
+```bash
+python check_chongqing_data.py --data_dir /path/to/chongqing/data
+```
+
+**修改配置尺寸** (在 `cfg_chongqing_baseline_*.yaml`):
+```yaml
+dataset:
+  img_height: 384   # 可选: 256, 384, 512
+  img_width: 384
+
+model:
+  input_shape: [24, 384, 384, 1]
+  target_shape: [24, 384, 384, 1]
+```
+
+**自动尺寸检测**: DataModule 支持自动检测数据尺寸
 
 ## 运行实验
 

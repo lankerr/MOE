@@ -47,7 +47,7 @@ class ChongqingRadarDataset(Dataset):
         mode: str = 'train',
         in_len: int = 24,
         out_len: int = 24,
-        img_size: Tuple[int, int] = (384, 384),
+        img_size: Optional[Tuple[int, int]] = None,  # None = 自动检测
         stride: int = 24,
         frame_interval_minutes: int = 6,  # 重庆数据6分钟间隔
     ):
@@ -62,8 +62,8 @@ class ChongqingRadarDataset(Dataset):
             输入序列长度
         out_len : int
             输出序列长度
-        img_size : tuple
-            图像尺寸 (H, W)
+        img_size : tuple, optional
+            图像尺寸 (H, W)。None = 自动检测
         stride : int
             滑动窗口步长
         frame_interval_minutes : int
@@ -74,7 +74,6 @@ class ChongqingRadarDataset(Dataset):
         self.in_len = in_len
         self.out_len = out_len
         self.seq_len = in_len + out_len
-        self.img_size = img_size
         self.stride = stride
         self.frame_interval = frame_interval_minutes
 
@@ -85,6 +84,16 @@ class ChongqingRadarDataset(Dataset):
             raise ValueError(f"[Chongqing] 未找到数据文件 in {data_dir}")
 
         print(f"[Chongqing] 找到 {len(self.data_files)} 个数据文件")
+
+        # 自动检测图像尺寸 (从第一个文件)
+        if img_size is None:
+            sample_data = np.load(self.data_files[0], mmap_mode='r')
+            detected_h, detected_w = sample_data.shape[1], sample_data.shape[2]
+            print(f"[Chongqing] 自动检测图像尺寸: {detected_h}x{detected_w}")
+            self.img_size = (detected_h, detected_w)
+        else:
+            self.img_size = img_size
+            print(f"[Chongqing] 使用指定图像尺寸: {self.img_size}")
 
         # 划分数据集 (按日期)
         train_ratio = 0.7
@@ -142,29 +151,52 @@ class ChongqingRadarDataset(Dataset):
 
         # 确保形状正确
         if seq.ndim == 2:
-            seq = seq[..., np.newaxis]
+            seq = seq[..., np.newaxis]  # (T, H, W) -> (T, H, W, 1)
         elif seq.ndim == 3:
-            pass
+            pass  # 已经是 (T, H, W)
         else:
             raise ValueError(f"Unexpected shape: {seq.shape}")
 
-        # 调整尺寸 (如果需要)
-        if seq.shape[1:3] != self.img_size:
-            # 使用简单的resize (可以后续优化为插值)
-            from skimage.transform import resize
-            resized = np.zeros((seq.shape[0], *self.img_size, seq.shape[3]), dtype=seq.dtype)
-            for i in range(seq.shape[0]):
-                for c in range(seq.shape[3]):
-                    resized[i, :, :, c] = resize(seq[i, :, :, c], self.img_size,
-                                                 preserve_range=True, order=1)
-            seq = resized
+        # 如果没有channel维度, 添加
+        if seq.ndim == 3:
+            seq = seq[..., np.newaxis]
+
+        # 调整尺寸 (如果需要) - 使用PyTorch插值
+        current_h, current_w = seq.shape[1], seq.shape[2]
+        target_h, target_w = self.img_size
+
+        if (current_h, current_w) != (target_h, target_w):
+            # 转换为Tensor进行resize
+            seq_tensor = torch.from_numpy(seq).float()  # (T, H, W, C)
+            seq_tensor = seq_tensor.permute(3, 0, 1, 2)  # (C, T, H, W)
+            seq_tensor = seq_tensor.unsqueeze(0)  # (1, C, T, H, W)
+
+            # Resize: 对每个时间步独立resize
+            # Reshape to (1*C*T, 1, H, W)
+            B, C, T, H, W = seq_tensor.shape
+            seq_tensor = seq_tensor.reshape(B * C * T, 1, H, W)
+
+            # 插值
+            import torch.nn.functional as F
+            seq_resized = F.interpolate(
+                seq_tensor,
+                size=(target_h, target_w),
+                mode='bilinear',
+                align_corners=False
+            )
+
+            # Reshape back: (1, C, T, target_h, target_w)
+            seq_resized = seq_resized.reshape(B, C, T, target_h, target_w)
+
+            # 转换回 numpy: (T, H, W, C)
+            seq_resized = seq_resized.squeeze(0).permute(1, 2, 3, 0).numpy()
+            seq = seq_resized
 
         # 划分输入和输出
         x = seq[:self.in_len]  # (T_in, H, W, C)
         y = seq[self.in_len:self.seq_len]  # (T_out, H, W, C)
 
-        # 转换为 Tensor: (H, W, T, C) for EarthFormer
-        # EarthFormer 期望 NTHWC 格式, 但DataLoader返回的是单样本
+        # 转换为 Tensor: (T, H, W, C) for EarthFormer
         x = torch.from_numpy(x).float()
         y = torch.from_numpy(y).float()
 
