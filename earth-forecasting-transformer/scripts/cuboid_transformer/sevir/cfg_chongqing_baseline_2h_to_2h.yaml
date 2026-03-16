@@ -35,8 +35,8 @@ dataset:
   stride: 24
   layout: "NTHWC"
   # 数据目录
-  data_dir: "/data_8t/dengjiaxuan/vil_gpu_daily_240_simple"
-  # 或者使用本地路径
+  data_dir: "C:\\Users\\97290\\Desktop\\datasets\\2026chongqing\\vil_gpu_daily_240_simple"
+  # 或者使用相对路径
   # data_dir: "./data/chongqing"
 
   metrics_mode: "0"

@@ -197,8 +197,9 @@ class ChongqingRadarDataset(Dataset):
         y = seq[self.in_len:self.seq_len]  # (T_out, H, W, C)
 
         # 转换为 Tensor: (T, H, W, C) for EarthFormer
-        x = torch.from_numpy(x).float()
-        y = torch.from_numpy(y).float()
+        # 复制数据以避免 NumPy 只读警告
+        x = torch.from_numpy(x.copy()).float()
+        y = torch.from_numpy(y.copy()).float()
 
         return x, y
 
