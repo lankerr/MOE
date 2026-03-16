@@ -1,117 +1,115 @@
 # Baseline Experiments 使用指南
 
-## 数据集支持
+## 实验优先级
+
+### 高优先级实验（主要实验）
+
+| 实验 | 数据集 | 配置文件 | 说明 |
+|------|--------|----------|------|
+| SEVIR 20帧 | SEVIR | `cfg_sevir_20frame_mae_mse.yaml` | EarthFormer基准，MAE+MSE loss |
+| 重庆 1h→1h | 重庆 | `cfg_chongqing_1h_to_1h.yaml` | 10帧→10帧，MAE+MSE loss |
+| 重庆 3h→3h | 重庆 | `cfg_chongqing_3h_to_3h.yaml` | 30帧→30帧，MAE+MSE loss |
+
+### 低优先级实验（探索性）
+
+| 实验 | 数据集 | 配置文件 | 说明 |
+|------|--------|----------|------|
+| SEVIR 2h→2h | SEVIR | `cfg_sevir_baseline_2h_to_2h.yaml` | 24帧→24帧探索 |
+| SEVIR 4h→4h | SEVIR | `cfg_sevir_baseline_4h_to_4h.yaml` | 48帧→48帧探索 |
+
+## 数据集说明
 
 ### 1. SEVIR 数据集 (美国雷达)
 - 帧间隔: 5分钟
-- 格式: SEVIR 标准格式
+- 时间范围: 2017年6月13日 - 2017年10月15日
+- 训练集: ~1738 样本
+- 验证集: ~600 样本
+- 测试集: 2017年9月15日后数据
 - 覆盖: 美国东南部
-- 配置: `cfg_sevir_baseline_*.yaml`
 
 ### 2. 重庆雷达数据
 - 帧间隔: 6分钟
-- 格式: `day_simple_YYYYMMDD.npy` (240, H, W)
+- 格式: `day_simple_YYYYMMDD.npy` (240, 384, 384)
+- 文件数: 224个
+- 训练集: ~1400 样本
+- 验证集: ~300 样本
+- 测试集: ~300 样本
 - 覆盖: 重庆地区 (山地地形)
-- 原始尺寸: 约 500x500 (根据雷达PPI扫描)
-- 预处理: resize 到目标尺寸
-- 配置: `cfg_chongqing_baseline_*.yaml`
 
-### 图像尺寸说明
+## 运行命令
 
-**检查实际数据尺寸**:
+### 高优先级实验
+
 ```bash
-python check_chongqing_data.py --data_dir /path/to/chongqing/data
-```
+# 1. SEVIR 基准实验 (与EarthFormer论文一致)
+python train_baseline_experiments.py --exp sevir_20frame
 
-**修改配置尺寸** (在 `cfg_chongqing_baseline_*.yaml`):
-```yaml
-dataset:
-  img_height: 384   # 可选: 256, 384, 512
-  img_width: 384
+# 2. 重庆 1h→1h
+python train_baseline_experiments.py --exp chongqing_1h_to_1h
 
-model:
-  input_shape: [24, 384, 384, 1]
-  target_shape: [24, 384, 384, 1]
-```
-
-**自动尺寸检测**: DataModule 支持自动检测数据尺寸
-
-## 运行实验
-
-### SEVIR 数据实验
-```bash
-# 高优先级: 2h→2h
-python train_baseline_experiments.py --exp 2h_to_2h
-
-# 高优先级: 4h→4h
-python train_baseline_experiments.py --exp 4h_to_4h
+# 3. 重庆 3h→3h
+python train_baseline_experiments.py --exp chongqing_3h_to_3h
 
 # 所有高优先级实验
 python train_baseline_experiments.py --priority high
 ```
 
-### 重庆数据实验
+### 快速测试 (1 epoch)
+
 ```bash
-# 重庆 2h→2h
-python train_baseline_experiments.py --exp chongqing_2h_to_2h
+python train_baseline_experiments.py --exp sevir_20frame --test_run
+python train_baseline_experiments.py --exp chongqing_1h_to_1h --test_run
 ```
 
-### 快速测试
-```bash
-# 仅1 epoch测试
-python train_baseline_experiments.py --exp 2h_to_2h --test_run
-```
+## 实验配置说明
 
-## 数据预处理
+### SEVIR 20帧基准
+- **输入**: 8帧 (40分钟)
+- **输出**: 12帧 (60分钟)
+- **Loss**: MAE + MSE (1:1)
+- **架构**: EarthFormer原始配置
+- **学习率**: 0.001 + cosine scheduler
 
-### 重庆数据预处理
-如果还没有预处理重庆数据，运行:
-```bash
-cd preprocess
-python chongqing_to_vil_gpu_daily_240_simple.py \
-    --input_dir /path/to/chongqing/radar \
-    --output_dir /path/to/output
-```
+### 重庆 1h→1h
+- **输入**: 10帧 (60分钟，6分钟/帧)
+- **输出**: 10帧 (60分钟)
+- **Loss**: MAE + MSE (1:1)
+- **架构**: 与SEVIR相同
+- **数据路径**: `C:\Users\97290\Desktop\datasets\2026chongqing\vil_gpu_daily_240_simple`
 
-输出: `day_simple_YYYYMMDD.npy` 文件
+### 重庆 3h→3h
+- **输入**: 30帧 (180分钟)
+- **输出**: 30帧 (180分钟)
+- **Loss**: MAE + MSE (1:1)
+- **架构**: 与SEVIR相同
+- **Batch size**: 4 (更长序列)
 
-## 实验配置
+## 重要注意事项
 
-### 输入-输出帧配置
-
-| 实验 | 输入帧 | 输出帧 | 比例 | 说明 |
-|------|--------|--------|------|------|
-| 2h_to_2h | 24 | 24 | 1:1 | 标准设置 |
-| 4h_to_4h | 48 | 48 | 1:1 | 可预测性上限 |
-| 2h_to_3h | 24 | 36 | 1:1.5 | 输出>输入 |
-| 4h_to_3h | 48 | 36 | 4:3 | 输入>输出 |
-
-### 自适应学习率
-- LRFinder: 自动寻找最优初始LR
-- ReduceLROnPlateau: 验证loss不降时自动降低LR
-- AutoStop: 综合早停 (loss + LR + gradient norm)
+1. **不修改架构**: 实验使用EarthFormer原始架构，不修改Flash Attention、CNN等
+2. **Loss函数**: 所有实验使用 MAE + MSE (1:1)
+3. **数据范围**: SEVIR使用2017年6-9月数据，与论文一致
+4. **评估指标**: CSI @ 16/74/133 dBZ
 
 ## 输出目录
+
 ```
 outputs/
-├── baseline_2h_to_2h_20260315_123456/
+├── baseline_sevir_20frame_20260316_123456/
 │   ├── config.yaml
 │   ├── checkpoints/
 │   └── logs/
-└── baseline_chongqing_2h_to_2h_20260315_123456/
+├── baseline_chongqing_1h_to_1h_20260316_123456/
+│   ├── config.yaml
+│   └── ...
+└── baseline_chongqing_3h_to_3h_20260316_123456/
     ├── config.yaml
     └── ...
 ```
 
-## 注意事项
+## RTX 5070 优化
 
-1. **RTX 5070 8GB**: 已针对显存优化
-   - batch_size: 1-4
-   - gradient_accumulation: 4
-   - bf16 mixed precision
-
-2. **重庆数据路径**: 修改配置文件中的 `data_dir`
-
-3. **时间对应**:
-   - SEVIR: 24帧 = 2小时 (5分钟/帧)
-   - 重庆: 24帧 ≈ 2.4小时 (6分钟/帧)
+- batch_size: 1-8 (根据序列长度调整)
+- bf16 mixed precision
+- gradient_clip_val: 1.0
+- early_stopping patience: 20

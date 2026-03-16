@@ -41,32 +41,33 @@ from utils.dataset_wrapper import SEVIRDataModule
 
 # 实验配置映射
 EXPERIMENT_CONFIGS = {
-    # SEVIR 数据集实验
+    # SEVIR 数据集实验 - 基准（与EarthFormer论文一致）
+    'sevir_20frame': {
+        'config': 'cfg_sevir_20frame_mae_mse.yaml',
+        'priority': 'high',
+        'description': 'SEVIR 20帧 (8→12) MAE+MSE - EarthFormer基准',
+    },
+    # SEVIR 数据集实验 - 探索性
     '2h_to_2h': {
         'config': 'cfg_sevir_baseline_2h_to_2h.yaml',
-        'priority': 'high',
-        'description': 'SEVIR 2h→2h (1:1) - 与70%论文一致',
+        'priority': 'medium',
+        'description': 'SEVIR 2h→2h (24→24) - 探索性实验',
     },
     '4h_to_4h': {
         'config': 'cfg_sevir_baseline_4h_to_4h.yaml',
-        'priority': 'high',
-        'description': 'SEVIR 4h→4h (1:1) - 测试可预测性上限',
-    },
-    '2h_to_3h': {
-        'config': 'cfg_sevir_baseline_2h_to_3h.yaml',
-        'priority': 'medium',
-        'description': 'SEVIR 2h→3h (1:1.5) - 探索性实验',
-    },
-    '4h_to_3h': {
-        'config': 'cfg_sevir_baseline_4h_to_3h.yaml',
         'priority': 'low',
-        'description': 'SEVIR 4h→3h (4:3) - 探索性实验',
+        'description': 'SEVIR 4h→4h (48→48) - 探索性实验',
     },
-    # 重庆数据集实验
-    'chongqing_2h_to_2h': {
-        'config': 'cfg_chongqing_baseline_2h_to_2h.yaml',
+    # 重庆数据集实验 - 主要实验
+    'chongqing_1h_to_1h': {
+        'config': 'cfg_chongqing_1h_to_1h.yaml',
         'priority': 'high',
-        'description': '重庆雷达 2h→2h - 山地地形预报',
+        'description': '重庆 1h→1h (10→10) MAE+MSE - 主要实验',
+    },
+    'chongqing_3h_to_3h': {
+        'config': 'cfg_chongqing_3h_to_3h.yaml',
+        'priority': 'high',
+        'description': '重庆 3h→3h (30→30) MAE+MSE - 主要实验',
     },
 }
 
